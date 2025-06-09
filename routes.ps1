@@ -1,0 +1,5 @@
+netsh interface ip set address name="veiltun" static 100.64.0.50 255.192.0.0 none
+#route ADD 100.64.0.0 MASK 255.192.0.0 100.64.0.50 METRIC 5 IF 55
+route ADD 100.64.0.1 mask 255.255.255.255 100.64.0.50 metric 5 IF 55
+route ADD 100.64.255.255 MASK 255.255.255.255 100.64.0.50 METRIC 261 IF 55
+route ADD 10.10.10.0 MASK 255.255.255.0 100.64.0.50 METRIC 5 IF 55
