@@ -1,14 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 
-	"github.com/Battlekeeper/veil/internal/veil"
+	"github.com/Battlekeeper/veyl/internal/database"
+	"github.com/Battlekeeper/veyl/internal/types"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
@@ -19,11 +23,39 @@ var (
 			return true
 		},
 	}
-	Relays      = make(map[string]veil.RelayClient)
+	Relays      = make(map[string]types.RelayClient)
 	RelaysMutex = &sync.Mutex{} // Ensure thread-safe access to Relays
 )
 
 func main() {
+	database.StartClient()
+	net := types.CreateNetwork("Test Network")
+	id := primitive.NewObjectID()
+	net.AddRelay(types.Relay{
+		Id:        id, // Example ObjectID
+		PublicKey: "examplePublicKey",
+		Name:      "Test Relay",
+		NetworkId: net.Id,
+	})
+
+	relay, err := types.GetRelayById(id)
+	if err != nil {
+		log.Fatalf("Failed to get relay by ID: %v", err)
+	}
+	fmt.Printf("Relay ID: %s, Public Key: %s, Name: %s\n", relay.Id.Hex(), relay.PublicKey, relay.Name)
+
+	return
+
+	log.Printf("Created network: %s with ID: %s", net.Name, net.Id.Hex())
+	net.AddRelay(types.Relay{
+		Id:        primitive.NewObjectID(), // Example ObjectID
+		PublicKey: "examplePublicKey",
+		Name:      "Test Relay",
+		NetworkId: net.Id,
+	})
+	time.Sleep(5 * time.Second) // Simulate some delay for the network setup
+	net.Update()
+
 	r := gin.Default()
 	r.GET("/register", func(c *gin.Context) {
 		// get public key from query parameters
@@ -53,7 +85,7 @@ func main() {
 			c.JSON(400, gin.H{"error": "port must be an integer"})
 			return
 		}
-		connection := veil.RelayConnection{
+		connection := types.RelayConnection{
 			RelayID:   relayId,
 			PublicKey: publicKey,
 			IP:        ip,
@@ -75,13 +107,13 @@ func main() {
 		}
 		defer conn.Close()
 
-		auth := veil.RelayAuth{}
+		auth := types.RelayAuth{}
 		err = conn.ReadJSON(&auth)
 		if err != nil {
 			log.Println("read error:", err)
 			return
 		}
-		RelayConnection := veil.RelayClient{
+		RelayConnection := types.RelayClient{
 			Auth:       auth,
 			Connection: conn,
 		}

@@ -6,8 +6,9 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/Battlekeeper/veil/internal/stun"
-	"github.com/Battlekeeper/veil/internal/veil"
+	"github.com/Battlekeeper/veyl/internal/stun"
+	"github.com/Battlekeeper/veyl/internal/types"
+	"github.com/Battlekeeper/veyl/internal/utils"
 	"golang.zx2c4.com/wireguard/conn"
 	"golang.zx2c4.com/wireguard/device"
 	"golang.zx2c4.com/wireguard/tun"
@@ -17,12 +18,12 @@ import (
 type Connection struct {
 	Tunnel tun.Device
 	Device *device.Device
-	Config veil.WgConfig
+	Config types.WgConfig
 }
 
 func (wgconn *Connection) TunnelUp() error {
 	var err error
-	wgconn.Tunnel, err = tun.CreateTUN("veiltun", 1420)
+	wgconn.Tunnel, err = tun.CreateTUN("veyltun", 1420)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,7 +40,7 @@ func (wgconn *Connection) TunnelUp() error {
 
 	// check if running on linux
 	if runtime.GOOS == "linux" {
-		exec.Command("ip", "link", "set", "veiltun", "up").Run()
+		exec.Command("ip", "link", "set", "veyltun", "up").Run()
 	}
 
 	return nil
@@ -87,13 +88,13 @@ func (wgconn *Connection) SetIpcConfig() error {
 		`private_key=%s
 listen_port=%d
 `,
-		veil.Base64ToHex(wgconn.Config.PrivateKey.String()), wgconn.Config.ListenPort)
+		utils.Base64ToHex(wgconn.Config.PrivateKey.String()), wgconn.Config.ListenPort)
 
 	for _, peer := range wgconn.Config.Peers {
 		configStr += fmt.Sprintf(`public_key=%s
 endpoint=%s
 persistent_keepalive_interval=25
-`, veil.Base64ToHex(peer.PublicKey.String()), peer.Endpoint)
+`, utils.Base64ToHex(peer.PublicKey.String()), peer.Endpoint)
 		for _, allowedIP := range peer.AllowedIps {
 			configStr += fmt.Sprintf(`allowed_ip=%s
 `, allowedIP)
@@ -119,7 +120,7 @@ func (wgconn *Connection) PrintCurrentIpcConfig() {
 	log.Println("WireGuard device is up with the following configuration:\n" + out)
 }
 
-func (wgconn *Connection) AddPeer(peer veil.WgPeer) error {
+func (wgconn *Connection) AddPeer(peer types.WgPeer) error {
 	wgconn.Config.Peers = append(wgconn.Config.Peers, peer)
 	wgconn.SetIpcConfig()
 	return nil

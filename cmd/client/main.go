@@ -11,8 +11,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Battlekeeper/veil/internal/veil"
-	"github.com/Battlekeeper/veil/internal/wg"
+	"github.com/Battlekeeper/veyl/internal/routing"
+	"github.com/Battlekeeper/veyl/internal/types"
+	"github.com/Battlekeeper/veyl/internal/utils"
+	"github.com/Battlekeeper/veyl/internal/wg"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
@@ -53,7 +55,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("Failed to read response body:", err)
 	}
-	auth, err := veil.DecodeRelayAuth(bytes)
+	auth, err := utils.DecodeRelayAuth(bytes)
 	if err != nil {
 		log.Fatalln("Failed to decode relay auth:", err)
 	}
@@ -61,13 +63,14 @@ func main() {
 	if err != nil {
 		log.Fatalln("Failed to parse public key:", err)
 	}
-	wgconn.AddPeer(veil.WgPeer{
+	wgconn.AddPeer(types.WgPeer{
 		PublicKey:  pubkey,
 		Endpoint:   fmt.Sprintf("%s:%d", auth.IP, auth.Port),
 		AllowedIps: []string{"100.64.0.0/10", "10.10.10.0/24"},
 	})
 
-	exec.Command("netsh", "interface", "ip", "set", "address", "name=\"veiltun\"", "static", "100.64.0.50", "255.192.0.0", "none").Run()
+	routing.SetInterfaceAddress("veyltun", "100.64.0.50")
+
 	exec.Command("route", "ADD", "100.64.0.1", "mask", "255.255.255.255", "100.64.0.50", "metric", "5", "IF", "55").Run()
 	exec.Command("route", "ADD", "100.64.255.255", "MASK", "255.255.255.255", "100.64.0.50", "METRIC", "261", "IF", "55").Run()
 	exec.Command("route", "ADD", "10.10.10.0", "MASK", "255.255.255.0", "100.64.0.50", "METRIC", "5", "IF", "55").Run()

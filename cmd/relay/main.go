@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"os/exec"
 
-	"github.com/Battlekeeper/veil/internal/stun"
-	"github.com/Battlekeeper/veil/internal/veil"
-	"github.com/Battlekeeper/veil/internal/wg"
+	"github.com/Battlekeeper/veyl/internal/stun"
+	"github.com/Battlekeeper/veyl/internal/types"
+	"github.com/Battlekeeper/veyl/internal/wg"
 	"github.com/google/nftables"
 	"github.com/google/nftables/expr"
 	"github.com/gorilla/websocket"
@@ -31,7 +31,7 @@ func main() {
 
 	wgconn.PrintCurrentIpcConfig()
 
-	ipcmd := exec.Command("ip", "addr", "add", "100.64.0.1/10", "dev", "veiltun")
+	ipcmd := exec.Command("ip", "addr", "add", "100.64.0.1/10", "dev", "veyltun")
 	data, err := ipcmd.CombinedOutput()
 	if err != nil {
 		log.Fatalf("Failed to add IP address: %s, error: %v", data, err)
@@ -53,7 +53,7 @@ func main() {
 		log.Fatalf("Failed to fetch STUN server: %v", err)
 	}
 
-	auth := veil.RelayAuth{
+	auth := types.RelayAuth{
 		RelayID:   "relay1",
 		PublicKey: wgconn.Config.PrivateKey.PublicKey().String(),
 		IP:        stunIp.String(),
@@ -63,8 +63,8 @@ func main() {
 	c.WriteJSON(auth)
 
 	for {
-		// decode to veil.RelayConnection
-		var relayConnection veil.RelayConnection
+		// decode to veyl.RelayConnection
+		var relayConnection types.RelayConnection
 		if err := c.ReadJSON(&relayConnection); err != nil {
 			log.Println("read error:", err)
 			break
@@ -74,7 +74,7 @@ func main() {
 			log.Println("Failed to parse public key:", err)
 			continue
 		}
-		peer := veil.WgPeer{
+		peer := types.WgPeer{
 			PublicKey:  pubkey,
 			Endpoint:   fmt.Sprintf("%s:%d", relayConnection.IP, relayConnection.Port),
 			AllowedIps: []string{"100.64.0.50/32"},
