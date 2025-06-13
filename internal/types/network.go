@@ -12,17 +12,18 @@ type veylNetwork struct {
 	Name string             `json:"name" bson:"name"`
 
 	// Associations
-	Relays    []Relay            `bson:"relays"`
-	Resources []Relay            `bson:"resources"`
-	Domain    primitive.ObjectID `json:"domain" bson:"domain"`
+	Relays    []primitive.ObjectID `bson:"relays"`
+	Resources []primitive.ObjectID `bson:"resources"`
+	Domain    primitive.ObjectID   `json:"domain" bson:"domain"`
+	Owner     primitive.ObjectID   `json:"owner" bson:"owner"`
 }
 
 func CreateNetwork(name string) veylNetwork {
 	network := veylNetwork{
 		Id:        primitive.NewObjectID(),
 		Name:      name,
-		Relays:    []Relay{},
-		Resources: []Relay{},
+		Relays:    []primitive.ObjectID{},
+		Resources: []primitive.ObjectID{},
 	}
 	database.Client.Database("veyl").Collection("networks").InsertOne(context.Background(), network)
 	return network
@@ -46,13 +47,13 @@ func (vn *veylNetwork) Update() error {
 	return err
 }
 
-func (vn *veylNetwork) AddRelay(relay Relay) error {
-	vn.Relays = append(vn.Relays, relay)
+func (vn *veylNetwork) AddRelay(id primitive.ObjectID) error {
+	vn.Relays = append(vn.Relays, id)
 	return vn.Update()
 }
 
-func (vn *veylNetwork) AddResource(resource Relay) error {
-	vn.Resources = append(vn.Resources, resource)
+func (vn *veylNetwork) AddResource(id primitive.ObjectID) error {
+	vn.Resources = append(vn.Resources, id)
 	return vn.Update()
 }
 

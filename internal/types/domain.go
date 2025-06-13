@@ -13,6 +13,7 @@ type Domain struct {
 
 	// Associations
 	Networks []primitive.ObjectID `json:"networks" bson:"networks"`
+	Owner    primitive.ObjectID   `json:"owner" bson:"owner"`
 }
 
 func CreateDomain(name string) Domain {

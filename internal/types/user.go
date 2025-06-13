@@ -2,8 +2,11 @@ package types
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/Battlekeeper/veyl/internal/database"
+	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,6 +21,15 @@ type User struct {
 func GetUserById(id primitive.ObjectID) (*User, error) {
 	var user User
 	err := database.Client.Database("veyl").Collection("users").FindOne(context.Background(), primitive.M{"_id": id}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func GetUserByEmail(email string) (*User, error) {
+	var user User
+	err := database.Client.Database("veyl").Collection("users").FindOne(context.Background(), primitive.M{"email": email}).Decode(&user)
 	if err != nil {
 		return nil, err
 	}
@@ -60,4 +72,37 @@ func CreateUser(email, passwordRaw string) (*User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func GenerateJWT(id string) (string, error) {
+	claims := jwt.MapClaims{
+		"id":  id,
+		"exp": time.Now().Add(time.Hour * 168).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte("dev-secret"))
+}
+
+func ValidateJWT(tokenString string) (string, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte("dev-secret"), nil
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("could not parse token: %w", err)
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		id, ok := claims["id"].(string)
+		if !ok {
+			return "", fmt.Errorf("invalid token claims: 'id' not found")
+		}
+		return id, nil
+	}
+
+	return "", fmt.Errorf("invalid token")
 }
