@@ -16,7 +16,7 @@ func StartClient() error {
 	defer cancel()
 
 	// Replace this URI with your MongoDB URI
-	clientOptions := options.Client().ApplyURI("mongodb://192.168.1.204:27017/")
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017/")
 
 	// Connect to MongoDB
 	client, err := mongo.Connect(ctx, clientOptions)

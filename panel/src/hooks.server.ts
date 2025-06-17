@@ -33,6 +33,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
     const data = await response.json()
     event.locals.user = data
+    event.locals.token = token
 
     return resolve(event)
 }

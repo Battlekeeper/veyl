@@ -1,25 +1,8 @@
 package main
 
 import (
-	"net/http"
-	"sync"
-
 	"github.com/Battlekeeper/veyl/cmd/control/router"
 	"github.com/Battlekeeper/veyl/internal/database"
-	"github.com/Battlekeeper/veyl/internal/types"
-	"github.com/gorilla/websocket"
-)
-
-var (
-	upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
-	}
-	Relays      = make(map[string]types.RelayClient)
-	RelaysMutex = &sync.Mutex{} // Ensure thread-safe access to Relays
 )
 
 func main() {

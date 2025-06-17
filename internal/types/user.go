@@ -76,7 +76,7 @@ func CreateUser(email, passwordRaw string) (*User, error) {
 
 func GenerateJWT(id string) (string, error) {
 	claims := jwt.MapClaims{
-		"id":  id,
+		"sub": id,
 		"exp": time.Now().Add(time.Hour * 168).Unix(),
 	}
 
@@ -97,9 +97,9 @@ func ValidateJWT(tokenString string) (string, error) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		id, ok := claims["id"].(string)
+		id, ok := claims["sub"].(string)
 		if !ok {
-			return "", fmt.Errorf("invalid token claims: 'id' not found")
+			return "", fmt.Errorf("invalid token claims: 'sub' not found")
 		}
 		return id, nil
 	}

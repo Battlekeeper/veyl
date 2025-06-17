@@ -16,15 +16,51 @@ type Domain struct {
 	Owner    primitive.ObjectID   `json:"owner" bson:"owner"`
 }
 
-func CreateDomain(name string) Domain {
+func CreateDomain(name string, owner primitive.ObjectID) Domain {
 	domain := Domain{
 		Id:       primitive.NewObjectID(),
 		Name:     name,
 		Networks: []primitive.ObjectID{},
+		Owner:    owner,
 	}
 	// Assuming a database client is available
 	database.Client.Database("veyl").Collection("domains").InsertOne(context.Background(), domain)
 	return domain
+}
+
+func GetDomainById(id primitive.ObjectID) (*Domain, error) {
+	var domain Domain
+	err := database.Client.Database("veyl").Collection("domains").FindOne(
+		context.Background(),
+		primitive.M{"_id": id},
+	).Decode(&domain)
+	if err != nil {
+		return nil, err
+	}
+	return &domain, nil
+}
+
+func GetDomainsByUserId(userId primitive.ObjectID) ([]Domain, error) {
+	domains := make([]Domain, 0)
+	cursor, err := database.Client.Database("veyl").Collection("domains").Find(
+		context.Background(),
+		primitive.M{"owner": userId},
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+	for cursor.Next(context.Background()) {
+		var domain Domain
+		if err := cursor.Decode(&domain); err != nil {
+			return nil, err
+		}
+		domains = append(domains, domain)
+	}
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+	return domains, nil
 }
 
 func (u *Domain) Update() error {
@@ -34,4 +70,38 @@ func (u *Domain) Update() error {
 		primitive.M{"$set": u},
 	)
 	return err
+}
+
+func (u *Domain) AddNetwork(id primitive.ObjectID) error {
+	u.Networks = append(u.Networks, id)
+	return u.Update()
+}
+
+func (u *Domain) GetNetworks() ([]veylNetwork, error) {
+	var networks []veylNetwork
+	if len(u.Networks) == 0 {
+		return networks, nil
+	}
+	cursor, err := database.Client.Database("veyl").Collection("networks").Find(
+		context.Background(),
+		primitive.M{"_id": primitive.M{"$in": u.Networks}},
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	for cursor.Next(context.Background()) {
+		var network veylNetwork
+		if err := cursor.Decode(&network); err != nil {
+			return nil, err
+		}
+		networks = append(networks, network)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return networks, nil
 }
