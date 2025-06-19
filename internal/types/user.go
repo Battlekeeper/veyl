@@ -12,10 +12,9 @@ import (
 )
 
 type User struct {
-	Id           primitive.ObjectID   `json:"id" bson:"_id"`
-	Domains      []primitive.ObjectID `json:"domains" bson:"domains"`
-	Email        string               `json:"email" bson:"email"`
-	PasswordHash string               `json:"password_hash" bson:"password_hash"`
+	Id           primitive.ObjectID `json:"id" bson:"_id"`
+	Email        string             `json:"email" bson:"email"`
+	PasswordHash string             `json:"password_hash" bson:"password_hash"`
 }
 
 func GetUserById(id primitive.ObjectID) (*User, error) {
@@ -62,7 +61,6 @@ func CreateUser(email, passwordRaw string) (*User, error) {
 	}
 	user := &User{
 		Id:           primitive.NewObjectID(),
-		Domains:      []primitive.ObjectID{},
 		Email:        email,
 		PasswordHash: hashed,
 	}
@@ -105,4 +103,17 @@ func ValidateJWT(tokenString string) (string, error) {
 	}
 
 	return "", fmt.Errorf("invalid token")
+}
+
+func AuthenticateUser(email, password string) (*User, error) {
+	user, err := GetUserByEmail(email)
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+
+	if !CheckPasswordHash(password, user.PasswordHash) {
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	return user, nil
 }

@@ -2,53 +2,53 @@ import type { Actions } from './$types';
 import { env } from '$env/dynamic/private';
 
 export const actions = {
-    createDomain: async (event) => {
+    createNetwork: async (event) => {
         const formData = await event.request.formData();
-        const domainName = formData.get('domainName') as string;
+        const networkName = formData.get('networkName') as string;
         const token = event.locals.token;
 
-        if (!domainName || !token) {
-            return { error: 'Domain name and token are required.' };
+        if (!networkName || !token) {
+            return { error: 'Network name and token are required.' };
         }
         try {
-            const response = await fetch(`${env.APIBASE}/api/domain/create`, {
+            const response = await fetch(`${env.APIBASE}/api/network/create`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ name: domainName })
+                body: JSON.stringify({ name: networkName, domain_id: event.params.domain })
             });
-
             if (!response.ok) {
-                throw new Error(`Failed to create domain: ${response.statusText}`);
+                throw new Error(`Failed to create network: ${response.statusText}`);
             }
 
             const data = await response.json();
-            return { success: true, domain: data };
+            return { success: true, network: data };
         } catch (error) {
+            console.error(error);
             return { error: error instanceof Error ? error.message : String(error) };
         }
     },
-    deleteDomain: async (event) => {
-        const formData = await event.request.formData();
-        const domainId = formData.get('domainId') as string;
+    deleteNetwork: async (event) => {
         const token = event.locals.token;
-        if (!domainId || !token) {
+        const formData = await event.request.formData();
+        const networkId = formData.get('networkId') as string;
+
+        if (!networkId || !token) {
             return { error: 'Domain ID and token are required.' };
         }
         try {
-            const response = await fetch(`${env.APIBASE}/api/domain/${domainId}`, {
+            const response = await fetch(`${env.APIBASE}/api/network/${networkId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ domain_id: domainId })
+                body: JSON.stringify({ network_id: networkId })
             })
         } catch (error) {
             return { error: error instanceof Error ? error.message : String(error) };
         }
-        return { success: true };
     }
 } satisfies Actions;

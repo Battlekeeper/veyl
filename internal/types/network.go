@@ -12,18 +12,20 @@ type veylNetwork struct {
 	Name string             `json:"name" bson:"name"`
 
 	// Associations
-	Relays    []primitive.ObjectID `bson:"relays"`
-	Resources []primitive.ObjectID `bson:"resources"`
+	Relays    []primitive.ObjectID `json:"relays" bson:"relays"`
+	Resources []primitive.ObjectID `json:"resources" bson:"resources"`
 	Domain    primitive.ObjectID   `json:"domain" bson:"domain"`
 	Owner     primitive.ObjectID   `json:"owner" bson:"owner"`
 }
 
-func CreateNetwork(name string) veylNetwork {
+func CreateNetwork(name string, domainId, owner primitive.ObjectID) veylNetwork {
 	network := veylNetwork{
 		Id:        primitive.NewObjectID(),
 		Name:      name,
 		Relays:    []primitive.ObjectID{},
 		Resources: []primitive.ObjectID{},
+		Domain:    domainId,
+		Owner:     owner,
 	}
 	database.Client.Database("veyl").Collection("networks").InsertOne(context.Background(), network)
 	return network
@@ -64,4 +66,26 @@ func (vn *veylNetwork) GetDomain() (Domain, error) {
 		return Domain{}, err
 	}
 	return domain, nil
+}
+
+func DeleteNetwork(id primitive.ObjectID) error {
+	network, err := GetNetworkById(id)
+	if err != nil {
+		return err
+	}
+	if network == nil {
+		return nil
+	}
+	// Remove network from domain
+	domain, err := network.GetDomain()
+	if err != nil {
+		return err
+	}
+	err = domain.RemoveNetwork(id)
+	if err != nil {
+		return err
+	}
+
+	_, err = database.Client.Database("veyl").Collection("networks").DeleteOne(context.Background(), primitive.M{"_id": id})
+	return err
 }

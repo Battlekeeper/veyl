@@ -18,7 +18,7 @@ type Resource struct {
 	Address net.IP             `json:"address" bson:"address"`
 
 	// Associations
-	NetworkId primitive.ObjectID `json:"network_id" bson:"network_id"`
+	Network primitive.ObjectID `json:"network" bson:"network"`
 }
 
 func GetResourceById(id primitive.ObjectID) (*Resource, error) {

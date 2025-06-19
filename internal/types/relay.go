@@ -15,7 +15,7 @@ type Relay struct {
 	AuthenticationKey string             `json:"authentication_key" bson:"authentication_key"`
 
 	// Associations
-	NetworkId primitive.ObjectID `json:"network_id" bson:"network_id"`
+	Network primitive.ObjectID `json:"network" bson:"network"`
 }
 
 func GetRelayById(id primitive.ObjectID) (*Relay, error) {

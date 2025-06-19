@@ -77,8 +77,18 @@ func (u *Domain) AddNetwork(id primitive.ObjectID) error {
 	return u.Update()
 }
 
+func (u *Domain) RemoveNetwork(id primitive.ObjectID) error {
+	for i, networkId := range u.Networks {
+		if networkId == id {
+			u.Networks = append(u.Networks[:i], u.Networks[i+1:]...)
+			return u.Update()
+		}
+	}
+	return nil
+}
+
 func (u *Domain) GetNetworks() ([]veylNetwork, error) {
-	var networks []veylNetwork
+	var networks = make([]veylNetwork, 0)
 	if len(u.Networks) == 0 {
 		return networks, nil
 	}
@@ -104,4 +114,26 @@ func (u *Domain) GetNetworks() ([]veylNetwork, error) {
 	}
 
 	return networks, nil
+}
+
+func DeleteDomain(id primitive.ObjectID) error {
+	domain, err := GetDomainById(id)
+	if err != nil {
+		return err
+	}
+	if domain == nil {
+		return nil
+	}
+
+	// Remove all networks associated with the domain
+	for _, networkId := range domain.Networks {
+		err = DeleteNetwork(networkId)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete the domain itself
+	_, err = database.Client.Database("veyl").Collection("domains").DeleteOne(context.Background(), primitive.M{"_id": id})
+	return err
 }

@@ -2,4 +2,4 @@
     export let data;
 </script>
 
-<pre>{JSON.stringify(data, null, 4)}</pre>
+<h1 class="text-2xl font-bold mb-4">{data.network.name}</h1>
