@@ -24,9 +24,8 @@ export type VeylNetwork = {
 
 export type Relay = {
     id: ObjectId;
-    public_key: string;
     name: string;
-    authentication_key: string;
+    authentication_token: string;
     network: ObjectId;
 };
 

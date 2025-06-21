@@ -9,10 +9,9 @@ import (
 )
 
 type Relay struct {
-	Id                primitive.ObjectID `json:"id" bson:"_id"`
-	PublicKey         string             `json:"public_key" bson:"public_key"`
-	Name              string             `json:"name" bson:"name"`
-	AuthenticationKey string             `json:"authentication_key" bson:"authentication_key"`
+	Id                  primitive.ObjectID `json:"id" bson:"_id"`
+	Name                string             `json:"name" bson:"name"`
+	AuthenticationToken string             `json:"authentication_token" bson:"authentication_token"`
 
 	// Associations
 	Network primitive.ObjectID `json:"network" bson:"network"`
@@ -25,6 +24,20 @@ func GetRelayById(id primitive.ObjectID) (*Relay, error) {
 		return nil, err
 	}
 	return &relay, nil
+}
+
+func CreateRelay(name string, networkId primitive.ObjectID) (*Relay, error) {
+	relay := &Relay{
+		Id:                  primitive.NewObjectID(),
+		Name:                name,
+		AuthenticationToken: GenerateAuthenticationToken(32),
+		Network:             networkId,
+	}
+	_, err := database.Client.Database("veyl").Collection("relays").InsertOne(context.Background(), relay)
+	if err != nil {
+		return nil, err
+	}
+	return relay, nil
 }
 
 type RelayAuth struct {

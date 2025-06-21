@@ -13,7 +13,6 @@ import (
 
 	"github.com/Battlekeeper/veyl/internal/routing"
 	"github.com/Battlekeeper/veyl/internal/types"
-	"github.com/Battlekeeper/veyl/internal/utils"
 	"github.com/Battlekeeper/veyl/internal/wg"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
@@ -55,7 +54,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("Failed to read response body:", err)
 	}
-	auth, err := utils.DecodeRelayAuth(bytes)
+	auth, err := types.DecodeRelayAuth(bytes)
 	if err != nil {
 		log.Fatalln("Failed to decode relay auth:", err)
 	}

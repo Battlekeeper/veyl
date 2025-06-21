@@ -8,7 +8,6 @@ import (
 
 	"github.com/Battlekeeper/veyl/internal/stun"
 	"github.com/Battlekeeper/veyl/internal/types"
-	"github.com/Battlekeeper/veyl/internal/utils"
 	"golang.zx2c4.com/wireguard/conn"
 	"golang.zx2c4.com/wireguard/device"
 	"golang.zx2c4.com/wireguard/tun"
@@ -88,13 +87,13 @@ func (wgconn *Connection) SetIpcConfig() error {
 		`private_key=%s
 listen_port=%d
 `,
-		utils.Base64ToHex(wgconn.Config.PrivateKey.String()), wgconn.Config.ListenPort)
+		types.Base64ToHex(wgconn.Config.PrivateKey.String()), wgconn.Config.ListenPort)
 
 	for _, peer := range wgconn.Config.Peers {
 		configStr += fmt.Sprintf(`public_key=%s
 endpoint=%s
 persistent_keepalive_interval=25
-`, utils.Base64ToHex(peer.PublicKey.String()), peer.Endpoint)
+`, types.Base64ToHex(peer.PublicKey.String()), peer.Endpoint)
 		for _, allowedIP := range peer.AllowedIps {
 			configStr += fmt.Sprintf(`allowed_ip=%s
 `, allowedIP)

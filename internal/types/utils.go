@@ -1,16 +1,15 @@
-package utils
+package types
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"log"
-
-	"github.com/Battlekeeper/veyl/internal/types"
 )
 
-func DecodeRelayAuth(body []byte) (*types.RelayAuth, error) {
-	var auth types.RelayAuth
+func DecodeRelayAuth(body []byte) (*RelayAuth, error) {
+	var auth RelayAuth
 	err := json.Unmarshal(body, &auth)
 	if err != nil {
 		return nil, err
@@ -34,4 +33,13 @@ func HexToBase64(hexKey string) (string, error) {
 	}
 	base64Key := base64.StdEncoding.EncodeToString(decodedKey)
 	return base64Key, nil
+}
+
+func GenerateAuthenticationToken(length int) string {
+	token := make([]byte, length)
+	_, err := rand.Read(token)
+	if err != nil {
+		log.Panic("Failed to generate authentication token:", err)
+	}
+	return base64.StdEncoding.EncodeToString(token)
 }
